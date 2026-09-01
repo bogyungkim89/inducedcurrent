@@ -1,84 +1,59 @@
 import streamlit as st
 import uuid
 
-st.set_page_config(page_title="유도 전류 방향 찾기 (심화 애니메이션)", page_icon="🧲", layout="wide")
+st.set_page_config(page_title="유도 전류 방향 퀴즈", page_icon="🧲", layout="wide")
 
-def get_animation_html(magnet_action, winding_dir, coil_top_pole, ext_dir, external_device):
-    # 매번 렌더링될 때마다 새로운 ID를 부여하여 애니메이션이 다시 한 번 재생되도록 함
+def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q1_solved, q2_solved):
     unique_id = uuid.uuid4().hex
 
-    # 자석 색상 및 극성 설정
+    # 자석 색상 및 극성
     if "N극" in magnet_action:
-        top_color, bottom_color = "#3498db", "#e74c3c" # 파랑(S), 빨강(N)
+        top_color, bottom_color = "#3498db", "#e74c3c"
         top_text, bottom_text = "S", "N"
     else:
-        top_color, bottom_color = "#e74c3c", "#3498db" # 빨강(N), 파랑(S)
+        top_color, bottom_color = "#e74c3c", "#3498db"
         top_text, bottom_text = "N", "S"
 
-    # 애니메이션 움직임 방향 설정
-    if "가까워짐" in magnet_action:
-        anim_name = "approach"
-    else:
-        anim_name = "recede"
+    # 애니메이션
+    anim_name = "approach" if "가까워짐" in magnet_action else "recede"
 
-    # 코일 감긴 방향에 따른 SVG 경로 생성
-    if winding_dir == "반시계 방향":
-        # 원통 앞면에서 왼쪽 -> 오른쪽으로 감겨 내려감
-        coil_paths = """
-        <!-- 앞면 도선 (왼쪽 -> 오른쪽) -->
-        <path d="M 150,190 Q 200,205 250,200" fill="none" stroke="#d35400" stroke-width="6"/>
-        <path d="M 150,220 Q 200,235 250,230" fill="none" stroke="#d35400" stroke-width="6"/>
-        <path d="M 150,250 Q 200,265 250,260" fill="none" stroke="#d35400" stroke-width="6"/>
-        <path d="M 150,280 Q 200,295 250,290" fill="none" stroke="#d35400" stroke-width="6"/>
-        """
+    # 퀴즈1 정답 여부에 따른 유도 극성 표시
+    if q1_solved:
+        pole_display = f"{coil_top_pole}극 유도됨"
+        pole_color = "#d32f2f"
     else:
-        # 원통 뒷면을 먼저 지나 앞면에서 오른쪽 -> 왼쪽으로 감겨 내려감
-        coil_paths = """
-        <!-- 뒷면 점선 (왼쪽 -> 오른쪽 뒤로 넘어감) -->
-        <path d="M 150,190 Q 200,180 250,205" fill="none" stroke="#a0522d" stroke-width="3" stroke-dasharray="4,4"/>
-        <path d="M 150,275 Q 200,295 250,290" fill="none" stroke="#a0522d" stroke-width="3" stroke-dasharray="4,4"/>
-        <!-- 앞면 도선 (오른쪽 -> 왼쪽) -->
-        <path d="M 250,205 Q 200,220 150,215" fill="none" stroke="#d35400" stroke-width="6"/>
-        <path d="M 250,235 Q 200,250 150,245" fill="none" stroke="#d35400" stroke-width="6"/>
-        <path d="M 250,265 Q 200,280 150,275" fill="none" stroke="#d35400" stroke-width="6"/>
-        """
+        pole_display = "? 극 유도됨"
+        pole_color = "#999999"
 
-    # 외부 회로 전류 화살표 방향
-    if ext_dir == "A_to_B":
-        arrows = """
-        <text x="80" y="295" font-size="24" fill="#d32f2f" font-weight="bold">↑</text>
-        <text x="305" y="295" font-size="24" fill="#d32f2f" font-weight="bold">↓</text>
-        <text x="200" y="425" font-size="16" fill="#d32f2f" font-weight="bold" text-anchor="middle">유도 전류 방향: A(왼쪽) → B(오른쪽)</text>
-        """
+    # 퀴즈2 정답 여부에 따른 전류 방향 표시
+    if q2_solved:
+        if ext_dir == "A_to_B":
+            arrows = f"""
+            <text x="80" y="295" font-size="24" fill="#d32f2f" font-weight="bold">↑</text>
+            <text x="305" y="295" font-size="24" fill="#d32f2f" font-weight="bold">↓</text>
+            <text x="200" y="425" font-size="16" fill="#d32f2f" font-weight="bold" text-anchor="middle">유도 전류: A(왼쪽) → B(오른쪽)</text>
+            """
+        else:
+            arrows = f"""
+            <text x="80" y="295" font-size="24" fill="#1976d2" font-weight="bold">↓</text>
+            <text x="305" y="295" font-size="24" fill="#1976d2" font-weight="bold">↑</text>
+            <text x="200" y="425" font-size="16" fill="#1976d2" font-weight="bold" text-anchor="middle">유도 전류: B(오른쪽) → A(왼쪽)</text>
+            """
     else:
         arrows = """
-        <text x="80" y="295" font-size="24" fill="#1976d2" font-weight="bold">↓</text>
-        <text x="305" y="295" font-size="24" fill="#1976d2" font-weight="bold">↑</text>
-        <text x="200" y="425" font-size="16" fill="#1976d2" font-weight="bold" text-anchor="middle">유도 전류 방향: B(오른쪽) → A(왼쪽)</text>
+        <text x="200" y="425" font-size="16" fill="#999999" font-weight="bold" text-anchor="middle">유도 전류 방향: ???</text>
         """
 
-    # HTML/CSS 구조 (1회만 재생되도록 forwards 적용)
     html_code = f"""
     <style>
-        .container {{
-            display: flex; justify-content: center; background-color: #f8f9fa;
-            border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px;
-        }}
-        .magnet {{
-            animation: {anim_name} 1.2s forwards ease-in-out;
-        }}
-        @keyframes approach {{
-            0% {{ transform: translateY(0px); }}
-            100% {{ transform: translateY(55px); }}
-        }}
-        @keyframes recede {{
-            0% {{ transform: translateY(55px); }}
-            100% {{ transform: translateY(0px); }}
-        }}
+        .container {{ display: flex; justify-content: center; background-color: #f8f9fa; border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px; }}
+        .magnet {{ animation: {anim_name} 1.2s forwards ease-in-out; }}
+        @keyframes approach {{ 0% {{ transform: translateY(0px); }} 100% {{ transform: translateY(55px); }} }}
+        @keyframes recede {{ 0% {{ transform: translateY(55px); }} 100% {{ transform: translateY(0px); }} }}
     </style>
     <div class="container" id="wrap-{unique_id}">
         <svg width="400" height="450" viewBox="0 0 400 450">
-            <!-- 막대 자석 -->
+            <!-- 자석 -->
             <g class="magnet">
                 <rect x="170" y="20" width="60" height="40" fill="{top_color}"/>
                 <rect x="170" y="60" width="60" height="40" fill="{bottom_color}"/>
@@ -86,26 +61,29 @@ def get_animation_html(magnet_action, winding_dir, coil_top_pole, ext_dir, exter
                 <text x="200" y="88" fill="white" font-size="22" font-weight="bold" text-anchor="middle">{bottom_text}</text>
             </g>
 
-            <!-- 유도된 극성 표시 -->
-            <text x="200" y="170" fill="#d32f2f" font-size="20" font-weight="bold" text-anchor="middle">{coil_top_pole}극 유도됨</text>
+            <!-- 유도 극성 -->
+            <text x="200" y="170" fill="{pole_color}" font-size="20" font-weight="bold" text-anchor="middle">{pole_display}</text>
 
             <!-- 원통 -->
             <rect x="150" y="180" width="100" height="120" rx="10" fill="#e0e0e0" stroke="#999" stroke-width="2"/>
             
-            <!-- 코일 연결선 (터미널 A, B) -->
+            <!-- 코일 연결선 (A, B) -->
             <polyline points="150,190 100,190 100,380 170,380" fill="none" stroke="#555" stroke-width="4"/>
             <polyline points="250,290 300,290 300,380 230,380" fill="none" stroke="#555" stroke-width="4"/>
             <text x="100" y="175" font-size="16" font-weight="bold" text-anchor="middle">A</text>
             <text x="300" y="275" font-size="16" font-weight="bold" text-anchor="middle">B</text>
 
-            <!-- 감긴 코일 -->
-            {coil_paths}
+            <!-- 감긴 코일 (반시계 방향 고정: 왼쪽 위 -> 오른쪽 아래) -->
+            <path d="M 150,190 Q 200,205 250,200" fill="none" stroke="#d35400" stroke-width="6"/>
+            <path d="M 150,220 Q 200,235 250,230" fill="none" stroke="#d35400" stroke-width="6"/>
+            <path d="M 150,250 Q 200,265 250,260" fill="none" stroke="#d35400" stroke-width="6"/>
+            <path d="M 150,280 Q 200,295 250,290" fill="none" stroke="#d35400" stroke-width="6"/>
 
             <!-- 외부 기기 -->
             <rect x="170" y="360" width="60" height="40" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
             <text x="200" y="385" font-size="14" font-weight="bold" text-anchor="middle">{external_device}</text>
 
-            <!-- 전류 방향 화살표 및 텍스트 -->
+            <!-- 전류 화살표 -->
             {arrows}
         </svg>
     </div>
@@ -114,69 +92,109 @@ def get_animation_html(magnet_action, winding_dir, coil_top_pole, ext_dir, exter
 
 
 def main():
-    st.title("🧲 코일에 흐르는 유도 전류 방향 찾기")
-    st.markdown("자석의 운동과 코일의 감긴 방향에 따라 전류가 어느 쪽으로 흐르는지 3단계로 알아봅시다.")
+    st.title("🧲 유도 전류 3단계 퀴즈")
+    st.markdown("자석의 움직임을 설정하고, 3가지 퀴즈를 순서대로 풀며 전자기 유도의 원리를 완성해 보세요!")
     
-    col_settings, col_visual = st.columns([1, 1.3])
+    col_settings, col_visual = st.columns([1, 1.2])
 
     with col_settings:
-        st.subheader("⚙️ 실험 세팅")
+        st.subheader("⚙️ 1. 실험 세팅")
         
         magnet_action = st.radio(
-            "1. 자석의 극과 운동 상태",
+            "자석의 극과 운동 상태를 선택하세요.",
             ["N극이 가까워짐", "S극이 가까워짐", "N극이 멀어짐", "S극이 멀어짐"]
         )
         
-        winding_dir = st.radio(
-            "2. 코일 감긴 방향 (위에서 볼 때)",
-            ["반시계 방향", "시계 방향"],
-            help="반시계 방향은 원통 앞면 도선이 왼쪽에서 오른쪽으로 내려가고, 시계 방향은 오른쪽에서 왼쪽으로 내려갑니다."
-        )
-        
         external_device = st.radio(
-            "3. 외부 회로 기기",
+            "외부 회로 기기를 선택하세요.",
             ["검류계", "전기 저항", "전구"]
         )
 
-        # 상태 및 논리 연산
+        # 상태 초기화 로직 (자석 움직임이 바뀌면 퀴즈 초기화)
+        if st.session_state.get('prev_action') != magnet_action:
+            st.session_state.prev_action = magnet_action
+            st.session_state.q1_solved = False
+            st.session_state.q2_solved = False
+            st.session_state.q3_solved = False
+            # 라디오 버튼 초기화
+            for key in ['q1_radio', 'q2_radio', 'q3_radio']:
+                if key in st.session_state:
+                    del st.session_state[key]
+
+        # 정답 판별 로직
         if "N극" in magnet_action:
             approaching = "가까워짐" in magnet_action
+            ans_q1 = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
             coil_top_pole = "N" if approaching else "S"
-            force_type = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
         else:
             approaching = "가까워짐" in magnet_action
+            ans_q1 = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
             coil_top_pole = "S" if approaching else "N"
-            force_type = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
 
-        # 전류 방향 판별 로직
-        # N극 유도 시 코일 앞면의 전류는 왼쪽 -> 오른쪽으로 흐르려고 함
-        if coil_top_pole == "N":
-            if winding_dir == "반시계 방향":
-                ext_dir = "B_to_A"  # 도선과 전류 방향이 일치하여 위에서 아래로 흐름
-            else:
-                ext_dir = "A_to_B"  # 도선과 전류 방향이 엇갈려 아래에서 위로 흐름
-        else: # S극 유도 시
-            if winding_dir == "반시계 방향":
-                ext_dir = "A_to_B"
-            else:
-                ext_dir = "B_to_A"
-        
-        ext_text = "A(왼쪽)에서 B(오른쪽)로" if ext_dir == "A_to_B" else "B(오른쪽)에서 A(왼쪽)로"
+        # 코일 감긴 방향 고정: 코일 앞면 도선이 왼쪽 -> 오른쪽으로 내려감
+        # 위쪽이 N극이면 엄지를 위로, 네 손가락은 오른쪽에서 왼쪽으로 감김 (B -> A)
+        ans_q2 = "B(오른쪽)에서 A(왼쪽)로" if coil_top_pole == "N" else "A(왼쪽)에서 B(오른쪽)로"
+        ext_dir = "B_to_A" if ans_q2 == "B(오른쪽)에서 A(왼쪽)로" else "A_to_B"
+
+        # 퀴즈3 정답 매칭 (유도 전류 방향이 같은 경우 = 코일 위쪽 극성이 같은 경우)
+        match_dict = {
+            "N극이 가까워짐": "S극이 멀어짐",
+            "S극이 멀어짐": "N극이 가까워짐",
+            "S극이 가까워짐": "N극이 멀어짐",
+            "N극이 멀어짐": "S극이 가까워짐"
+        }
+        ans_q3 = match_dict[magnet_action]
 
         st.divider()
-        st.subheader("💡 3단계 물리적 해석")
-        st.info(f"**[1단계: 힘의 방향]** 렌츠의 법칙에 의해 자석의 운동을 방해하는 **{force_type}**이 작용합니다.")
-        st.info(f"**[2단계: 코일의 극성]** 방해하는 힘을 만들기 위해 코일 위쪽은 **{coil_top_pole}극**이 됩니다.")
-        st.success(f"**[3단계: 유도 전류]** 오른손 법칙과 코일이 감긴 방향({winding_dir})을 고려할 때, {external_device}에는 **{ext_text}** 유도 전류가 흐릅니다.")
+        st.subheader("📝 2. 퀴즈 풀기")
+        
+        # [퀴즈 1]
+        q1_options = ["선택하세요", "밀어내는 힘 (척력)", "끌어당기는 힘 (인력)"]
+        q1_user = st.radio("💡 **퀴즈 1.** 자석과 코일 사이에는 어떤 방향의 힘이 작용할까요?", q1_options, key="q1_radio")
+        
+        if q1_user == ans_q1:
+            st.success(f"⭕ 정답! 렌츠의 법칙에 의해 자석의 운동을 방해하므로 코일 위쪽은 **{coil_top_pole}극**이 됩니다.")
+            st.session_state.q1_solved = True
+        elif q1_user != "선택하세요":
+            st.error("❌ 다시 생각해 보세요. 자석의 움직임을 '방해'하려면 어떻게 밀거나 당겨야 할까요?")
+
+        # [퀴즈 2] (퀴즈 1을 맞혀야 등장)
+        if st.session_state.q1_solved:
+            q2_options = ["선택하세요", "A(왼쪽)에서 B(오른쪽)로", "B(오른쪽)에서 A(왼쪽)로"]
+            q2_user = st.radio(f"💡 **퀴즈 2.** 오른손 법칙을 적용할 때, {external_device}에 흐르는 전류 방향은?", q2_options, key="q2_radio")
+            
+            if q2_user == ans_q2:
+                st.success(f"⭕ 정답! 오른손 엄지를 {coil_top_pole}극 쪽으로 향하게 감아쥐면 전류는 **{ans_q2}** 흐릅니다.")
+                st.session_state.q2_solved = True
+            elif q2_user != "선택하세요":
+                st.error("❌ 다시 생각해 보세요. 엄지손가락을 N극 방향으로 향하게 하고 네 손가락을 감아쥐어 보세요.")
+
+        # [퀴즈 3] (퀴즈 2를 맞혀야 등장)
+        if st.session_state.q2_solved:
+            q3_options = ["N극이 가까워짐", "S극이 가까워짐", "N극이 멀어짐", "S극이 멀어짐"]
+            q3_options.remove(magnet_action) # 현재 상태 제외
+            q3_options.insert(0, "선택하세요")
+            
+            q3_user = st.radio("💡 **퀴즈 3.** 지금 선택한 상황과 **유도 전류의 방향이 동일한** 경우는 다음 중 무엇일까요?", q3_options, key="q3_radio")
+            
+            if q3_user == ans_q3:
+                st.balloons()
+                st.success(f"🎉 완벽합니다! '{ans_q3}'일 때도 코일 위쪽이 똑같이 **{coil_top_pole}극**이 되기 때문에 유도 전류의 방향이 일치합니다.")
+                st.session_state.q3_solved = True
+            elif q3_user != "선택하세요":
+                st.error("❌ 다시 생각해 보세요. 코일 위쪽이 같은 극이 되려면 자석이 어떻게 움직여야 할까요?")
 
     with col_visual:
-        st.subheader("👀 실시간 애니메이션 시각화")
-        
-        # 다시 보기 버튼
+        st.subheader("👀 실시간 애니메이션")
         if st.button("▶ 애니메이션 다시 재생하기"):
-            pass # 버튼을 누르면 Streamlit이 리렌더링되며 애니메이션이 다시 1회 플레이됨
-            
-        animation_html = get_animation_html(magnet_action, winding_dir, coil_top_pole, ext_dir, external_device)
+            pass 
+        
+        # 퀴즈 진행도에 따라 숨겨졌던 애니메이션 정보(유도 극성, 화살표)가 드러남
+        animation_html = get_animation_html(
+            magnet_action, coil_top_pole, ext_dir, external_device, 
+            st.session_state.get('q1_solved', False), 
+            st.session_state.get('q2_solved', False)
+        )
         st.components.v1.html(animation_html, height=500)
 
 if __name__ == "__main__":
