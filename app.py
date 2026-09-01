@@ -38,14 +38,12 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
         
         # 렌츠의 법칙: 자기력은 운동을 방해하는 방향
         if "가까워짐" in magnet_action:
-            # 밀어내는 힘 (위쪽으로 작용)
             force_arrow = """
             <line x1="125" y1="90" x2="125" y2="50" stroke="#d32f2f" stroke-width="4" stroke-linecap="round"/>
             <polygon points="115,60 135,60 125,40" fill="#d32f2f"/>
             <text x="125" y="25" font-size="14" font-weight="bold" fill="#d32f2f" text-anchor="middle">힘 (척력)</text>
             """
         else:
-            # 끌어당기는 힘 (아래쪽으로 작용)
             force_arrow = """
             <line x1="125" y1="50" x2="125" y2="90" stroke="#d32f2f" stroke-width="4" stroke-linecap="round"/>
             <polygon points="115,80 135,80 125,100" fill="#d32f2f"/>
@@ -56,46 +54,51 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
         pole_color = "#999999"
         force_arrow = ""
 
-    # 외부 회로 기기 시각화 (기호)
+    # 외부 회로 기기 시각화 (기호만, 박스 제거, 선 연결)
     if external_device == "검류계":
         device_svg = """
-        <rect x="160" y="435" width="80" height="50" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
-        <circle cx="200" cy="460" r="16" fill="none" stroke="#333" stroke-width="2"/>
+        <line x1="160" y1="460" x2="184" y2="460" stroke="#555" stroke-width="4"/>
+        <line x1="216" y1="460" x2="240" y2="460" stroke="#555" stroke-width="4"/>
+        <circle cx="200" cy="460" r="16" fill="#f8f9fa" stroke="#333" stroke-width="2"/>
         <text x="200" y="466" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">G</text>
         """
     elif external_device == "전기 저항":
         device_svg = """
-        <rect x="160" y="435" width="80" height="50" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
-        <polyline points="160,460 168,460 174,450 186,470 198,450 210,470 222,450 228,460 240,460" fill="none" stroke="#333" stroke-width="3"/>
+        <polyline points="160,460 170,460 175,448 185,472 195,448 205,472 215,448 225,472 230,460 240,460" fill="none" stroke="#333" stroke-width="3"/>
         """
-    else: # 전구
+    else: # 전구 (교과서 표준: 원 안에 꽉 차는 X자)
         device_svg = """
-        <rect x="160" y="435" width="80" height="50" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
-        <circle cx="200" cy="460" r="18" fill="none" stroke="#333" stroke-width="2"/>
-        <path d="M 187,447 L 213,473 M 187,473 L 213,447" stroke="#333" stroke-width="2"/>
+        <line x1="160" y1="460" x2="185" y2="460" stroke="#555" stroke-width="4"/>
+        <line x1="215" y1="460" x2="240" y2="460" stroke="#555" stroke-width="4"/>
+        <circle cx="200" cy="460" r="15" fill="#f8f9fa" stroke="#333" stroke-width="2"/>
+        <line x1="189.4" y1="449.4" x2="210.6" y2="470.6" stroke="#333" stroke-width="2"/>
+        <line x1="189.4" y1="470.6" x2="210.6" y2="449.4" stroke="#333" stroke-width="2"/>
         """
 
-    # 2단계 정답 시: 전류 방향 화살표 (코일 위 & 회로 전체)
+    # 2단계 정답 시: 전류 방향 화살표 (코일 도선 & 회로)
     coil_current_arrows = ""
     if q2_solved:
+        # 도선 경로에 맞춘 정확한 화살표 렌더링을 위해 기준 y좌표들 설정
+        base_y_coords = [240, 270, 300, 330] 
+
         if ext_dir == "A_to_B":
-            # 전체 회로 텍스트
+            # 1. 밖에서는 A -> B (왼쪽에서 오른쪽으로 흐름)
             arrows = """
             <text x="200" y="520" font-size="30" fill="#d32f2f" font-weight="bold" text-anchor="middle">→</text>
             <text x="200" y="545" font-size="16" fill="#d32f2f" font-weight="bold" text-anchor="middle">유도 전류: A(왼쪽) → B(오른쪽)</text>
             """
-            # 코일 도선 위에 겹치는 화살표 (왼쪽에서 오른쪽으로 흐름 `>`)
-            for y in [240, 270, 300, 330]:
-                coil_current_arrows += f'<polygon points="195,{y+2} 205,{y+7.5} 195,{y+13}" fill="#ffff00" stroke="#333" stroke-width="1.5"/>'
+            # 2. 코일 내부에서는 오른쪽에서 왼쪽으로 올라가며 폐회로 형성 (◀ 화살표)
+            for y in base_y_coords:
+                coil_current_arrows += f'<polygon points="205,{y+5} 190,{y+10} 205,{y+15}" fill="#ffeb3b" stroke="#333" stroke-width="1.5"/>'
         else:
-            # 전체 회로 텍스트
+            # 1. 밖에서는 B -> A (오른쪽에서 왼쪽으로 흐름)
             arrows = """
             <text x="200" y="520" font-size="30" fill="#1976d2" font-weight="bold" text-anchor="middle">←</text>
             <text x="200" y="545" font-size="16" fill="#1976d2" font-weight="bold" text-anchor="middle">유도 전류: B(오른쪽) → A(왼쪽)</text>
             """
-            # 코일 도선 위에 겹치는 화살표 (오른쪽에서 왼쪽으로 흐름 `<`)
-            for y in [240, 270, 300, 330]:
-                coil_current_arrows += f'<polygon points="205,{y+2} 195,{y+7.5} 205,{y+13}" fill="#ffff00" stroke="#333" stroke-width="1.5"/>'
+            # 2. 코일 내부에서는 왼쪽에서 오른쪽으로 내려가며 폐회로 형성 (▶ 화살표)
+            for y in base_y_coords:
+                coil_current_arrows += f'<polygon points="190,{y+5} 205,{y+10} 190,{y+15}" fill="#ffeb3b" stroke="#333" stroke-width="1.5"/>'
     else:
         arrows = '<text x="200" y="545" font-size="16" fill="#999999" font-weight="bold" text-anchor="middle">유도 전류 방향: ???</text>'
 
@@ -107,10 +110,9 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
         @keyframes recede {{ 0% {{ transform: translateY(60px); }} 100% {{ transform: translateY(0px); }} }}
     </style>
     <div class="container" id="wrap-{unique_id}">
-        <!-- SVG 캔버스 세로 길이를 580으로 늘려 겹침 완벽 방지 -->
         <svg width="400" height="580" viewBox="0 0 400 580">
             
-            <!-- 자석 및 동적 화살표 그룹 -->
+            <!-- 자석 및 운동방향/힘 화살표 -->
             <g class="magnet">
                 <rect x="155" y="30" width="60" height="40" fill="{top_color}"/>
                 <rect x="155" y="70" width="60" height="40" fill="{bottom_color}"/>
@@ -121,36 +123,36 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
                 {force_arrow}
             </g>
 
-            <!-- 유도 극성 텍스트 (자석 하단과 겹치지 않게 y=210으로 이동) -->
+            <!-- 유도 극성 텍스트 -->
             <text x="185" y="210" fill="{pole_color}" font-size="20" font-weight="bold" text-anchor="middle">{pole_display}</text>
 
-            <!-- 원통 (y=230으로 내림) -->
+            <!-- 원통 -->
             <rect x="135" y="230" width="100" height="130" rx="10" fill="#e0e0e0" stroke="#999" stroke-width="2"/>
             
-            <!-- 감긴 코일 선 -->
+            <!-- 코일 도선 뼈대 -->
             <path d="M 135,240 Q 185,255 235,250" fill="none" stroke="#d35400" stroke-width="6"/>
             <path d="M 135,270 Q 185,285 235,280" fill="none" stroke="#d35400" stroke-width="6"/>
             <path d="M 135,300 Q 185,315 235,310" fill="none" stroke="#d35400" stroke-width="6"/>
             <path d="M 135,330 Q 185,345 235,340" fill="none" stroke="#d35400" stroke-width="6"/>
 
-            <!-- 도선 위의 전류 화살표 -->
+            <!-- 도선 위의 전류 화살표 (폐회로 일치) -->
             {coil_current_arrows}
 
             <!-- 외부 회로 연결선 -->
             <polyline points="135,240 85,240 85,460 160,460" fill="none" stroke="#555" stroke-width="4"/>
             <polyline points="235,340 285,340 285,460 240,460" fill="none" stroke="#555" stroke-width="4"/>
             
-            <!-- 단자 A, B (기기 바로 양옆 배치) -->
+            <!-- 단자 A, B (기기 바로 양옆) -->
             <circle cx="160" cy="460" r="5" fill="#333"/>
             <text x="145" y="450" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">A</text>
             
             <circle cx="240" cy="460" r="5" fill="#333"/>
             <text x="255" y="450" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">B</text>
 
-            <!-- 외부 기기 박스 및 심볼 -->
+            <!-- 외부 기기 (사각형 없이 다이렉트 기호 렌더링) -->
             {device_svg}
 
-            <!-- 결과 전류 화살표 (하단) -->
+            <!-- 최종 회로 아래 텍스트 화살표 -->
             {arrows}
         </svg>
     </div>
@@ -286,7 +288,7 @@ def main():
             st.session_state.get('q1_solved', False), 
             st.session_state.get('q2_solved', False)
         )
-        st.components.v1.html(animation_html, height=650) # 세로 공간을 더 넉넉히 확보
+        st.components.v1.html(animation_html, height=650) 
 
 if __name__ == "__main__":
     main()
