@@ -109,26 +109,27 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
 
 
 def show_heart_balloons():
-    """정답을 맞혔을 때 화면 전체에 하트가 떠오르는 CSS 애니메이션 생성"""
+    """정답을 맞혔을 때 화면 전체에 거대한 하트가 떠오르는 CSS 애니메이션 생성"""
     heart_html = """
     <style>
-    @keyframes floatUp {
-        0% { bottom: -10%; opacity: 1; transform: translateX(0) scale(1); }
-        50% { transform: translateX(20px) scale(1.2); }
-        100% { bottom: 110%; opacity: 0; transform: translateX(-20px) scale(1); }
+    @keyframes floatUpBig {
+        0% { bottom: -30%; opacity: 1; transform: translateX(0) scale(0.8); }
+        50% { transform: translateX(30px) scale(1.1); }
+        100% { bottom: 120%; opacity: 0; transform: translateX(-30px) scale(1.2); }
     }
     .heart-balloon {
-        position: fixed; font-size: 40px; z-index: 9999; animation: floatUp 4s ease-in-out forwards;
+        position: fixed; 
+        font-size: 120px; /* 하트 크기를 진짜 풍선만하게(120px) 대폭 확대 */
+        z-index: 9999; 
+        animation: floatUpBig 5s ease-in-out forwards;
+        filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3)); /* 그림자 효과로 입체감 부여 */
     }
     </style>
     <div class="heart-balloon" style="left: 10%; animation-delay: 0s;">❤️</div>
-    <div class="heart-balloon" style="left: 20%; animation-delay: 0.5s;">💖</div>
-    <div class="heart-balloon" style="left: 30%; animation-delay: 0.2s;">❤️</div>
-    <div class="heart-balloon" style="left: 45%; animation-delay: 0.8s;">💕</div>
-    <div class="heart-balloon" style="left: 60%; animation-delay: 0.3s;">❤️</div>
-    <div class="heart-balloon" style="left: 75%; animation-delay: 0.6s;">💖</div>
-    <div class="heart-balloon" style="left: 85%; animation-delay: 0.1s;">❤️</div>
-    <div class="heart-balloon" style="left: 95%; animation-delay: 0.7s;">💕</div>
+    <div class="heart-balloon" style="left: 25%; animation-delay: 0.5s;">💖</div>
+    <div class="heart-balloon" style="left: 45%; animation-delay: 0.2s;">❤️</div>
+    <div class="heart-balloon" style="left: 65%; animation-delay: 0.8s;">💕</div>
+    <div class="heart-balloon" style="left: 80%; animation-delay: 0.3s;">❤️</div>
     """
     st.markdown(heart_html, unsafe_allow_html=True)
 
@@ -223,7 +224,7 @@ def main():
                 st.success(f"🎉 완벽합니다! '{ans_q3}'일 때도 코일 위쪽이 똑같이 **{coil_top_pole}극**이 되기 때문에 유도 전류의 방향이 일치합니다.")
                 st.session_state.q3_solved = True
                 
-                # 모든 퀴즈를 통과했을 때만 하트 풍선 애니메이션 단 한 번 실행
+                # 모든 퀴즈를 통과했을 때만 대형 하트 풍선 애니메이션 단 한 번 실행
                 if not st.session_state.get('hearts_shown', False):
                     show_heart_balloons()
                     st.session_state.hearts_shown = True
