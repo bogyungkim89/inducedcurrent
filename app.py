@@ -15,83 +15,142 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
         top_color, bottom_color = "#e74c3c", "#3498db"
         top_text, bottom_text = "N", "S"
 
-    # 애니메이션 움직임 및 자석 오른쪽 운동방향 화살표 설정
+    # 애니메이션 움직임 및 '운동 방향' 화살표 (오른쪽)
     if "가까워짐" in magnet_action:
         anim_name = "approach"
         motion_arrow = """
-        <line x1="250" y1="35" x2="250" y2="75" stroke="#333" stroke-width="4" stroke-linecap="round"/>
-        <polygon points="240,65 260,65 250,85" fill="#333"/>
-        <text x="250" y="105" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">운동 방향</text>
+        <line x1="245" y1="50" x2="245" y2="90" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="235,80 255,80 245,100" fill="#333"/>
+        <text x="245" y="120" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">운동 방향</text>
         """
     else:
         anim_name = "recede"
         motion_arrow = """
-        <line x1="250" y1="85" x2="250" y2="45" stroke="#333" stroke-width="4" stroke-linecap="round"/>
-        <polygon points="240,55 260,55 250,35" fill="#333"/>
-        <text x="250" y="25" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">운동 방향</text>
+        <line x1="245" y1="90" x2="245" y2="50" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="235,60 255,60 245,40" fill="#333"/>
+        <text x="245" y="25" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">운동 방향</text>
         """
 
-    # 퀴즈1 정답 여부에 따른 유도 극성 표시
+    # 1단계 정답 시: 극성 텍스트 및 '자기력' 화살표 (왼쪽)
     if q1_solved:
         pole_display = f"{coil_top_pole}극 유도됨"
         pole_color = "#d32f2f"
+        
+        # 렌츠의 법칙: 자기력은 운동을 방해하는 방향
+        if "가까워짐" in magnet_action:
+            # 밀어내는 힘 (위쪽으로 작용)
+            force_arrow = """
+            <line x1="125" y1="90" x2="125" y2="50" stroke="#d32f2f" stroke-width="4" stroke-linecap="round"/>
+            <polygon points="115,60 135,60 125,40" fill="#d32f2f"/>
+            <text x="125" y="25" font-size="14" font-weight="bold" fill="#d32f2f" text-anchor="middle">힘 (척력)</text>
+            """
+        else:
+            # 끌어당기는 힘 (아래쪽으로 작용)
+            force_arrow = """
+            <line x1="125" y1="50" x2="125" y2="90" stroke="#d32f2f" stroke-width="4" stroke-linecap="round"/>
+            <polygon points="115,80 135,80 125,100" fill="#d32f2f"/>
+            <text x="125" y="120" font-size="14" font-weight="bold" fill="#d32f2f" text-anchor="middle">힘 (인력)</text>
+            """
     else:
         pole_display = "? 극 유도됨"
         pole_color = "#999999"
+        force_arrow = ""
 
-    # 퀴즈2 정답 여부에 따른 전류 방향 표시
+    # 외부 회로 기기 시각화 (기호)
+    if external_device == "검류계":
+        device_svg = """
+        <rect x="160" y="435" width="80" height="50" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
+        <circle cx="200" cy="460" r="16" fill="none" stroke="#333" stroke-width="2"/>
+        <text x="200" y="466" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">G</text>
+        """
+    elif external_device == "전기 저항":
+        device_svg = """
+        <rect x="160" y="435" width="80" height="50" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
+        <polyline points="160,460 168,460 174,450 186,470 198,450 210,470 222,450 228,460 240,460" fill="none" stroke="#333" stroke-width="3"/>
+        """
+    else: # 전구
+        device_svg = """
+        <rect x="160" y="435" width="80" height="50" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
+        <circle cx="200" cy="460" r="18" fill="none" stroke="#333" stroke-width="2"/>
+        <path d="M 187,447 L 213,473 M 187,473 L 213,447" stroke="#333" stroke-width="2"/>
+        """
+
+    # 2단계 정답 시: 전류 방향 화살표 (코일 위 & 회로 전체)
+    coil_current_arrows = ""
     if q2_solved:
         if ext_dir == "A_to_B":
-            arrows = f"""
-            <text x="80" y="295" font-size="24" fill="#d32f2f" font-weight="bold">↑</text>
-            <text x="305" y="295" font-size="24" fill="#d32f2f" font-weight="bold">↓</text>
-            <text x="200" y="425" font-size="16" fill="#d32f2f" font-weight="bold" text-anchor="middle">유도 전류: A(왼쪽) → B(오른쪽)</text>
+            # 전체 회로 텍스트
+            arrows = """
+            <text x="200" y="520" font-size="30" fill="#d32f2f" font-weight="bold" text-anchor="middle">→</text>
+            <text x="200" y="545" font-size="16" fill="#d32f2f" font-weight="bold" text-anchor="middle">유도 전류: A(왼쪽) → B(오른쪽)</text>
             """
+            # 코일 도선 위에 겹치는 화살표 (왼쪽에서 오른쪽으로 흐름 `>`)
+            for y in [240, 270, 300, 330]:
+                coil_current_arrows += f'<polygon points="195,{y+2} 205,{y+7.5} 195,{y+13}" fill="#ffff00" stroke="#333" stroke-width="1.5"/>'
         else:
-            arrows = f"""
-            <text x="80" y="295" font-size="24" fill="#1976d2" font-weight="bold">↓</text>
-            <text x="305" y="295" font-size="24" fill="#1976d2" font-weight="bold">↑</text>
-            <text x="200" y="425" font-size="16" fill="#1976d2" font-weight="bold" text-anchor="middle">유도 전류: B(오른쪽) → A(왼쪽)</text>
+            # 전체 회로 텍스트
+            arrows = """
+            <text x="200" y="520" font-size="30" fill="#1976d2" font-weight="bold" text-anchor="middle">←</text>
+            <text x="200" y="545" font-size="16" fill="#1976d2" font-weight="bold" text-anchor="middle">유도 전류: B(오른쪽) → A(왼쪽)</text>
             """
+            # 코일 도선 위에 겹치는 화살표 (오른쪽에서 왼쪽으로 흐름 `<`)
+            for y in [240, 270, 300, 330]:
+                coil_current_arrows += f'<polygon points="205,{y+2} 195,{y+7.5} 205,{y+13}" fill="#ffff00" stroke="#333" stroke-width="1.5"/>'
     else:
-        arrows = """
-        <text x="200" y="425" font-size="16" fill="#999999" font-weight="bold" text-anchor="middle">유도 전류 방향: ???</text>
-        """
+        arrows = '<text x="200" y="545" font-size="16" fill="#999999" font-weight="bold" text-anchor="middle">유도 전류 방향: ???</text>'
 
     html_code = f"""
     <style>
         .container {{ display: flex; justify-content: center; background-color: #f8f9fa; border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px; }}
         .magnet {{ animation: {anim_name} 1.2s forwards ease-in-out; }}
-        @keyframes approach {{ 0% {{ transform: translateY(0px); }} 100% {{ transform: translateY(55px); }} }}
-        @keyframes recede {{ 0% {{ transform: translateY(55px); }} 100% {{ transform: translateY(0px); }} }}
+        @keyframes approach {{ 0% {{ transform: translateY(0px); }} 100% {{ transform: translateY(60px); }} }}
+        @keyframes recede {{ 0% {{ transform: translateY(60px); }} 100% {{ transform: translateY(0px); }} }}
     </style>
     <div class="container" id="wrap-{unique_id}">
-        <svg width="400" height="450" viewBox="0 0 400 450">
+        <!-- SVG 캔버스 세로 길이를 580으로 늘려 겹침 완벽 방지 -->
+        <svg width="400" height="580" viewBox="0 0 400 580">
+            
+            <!-- 자석 및 동적 화살표 그룹 -->
             <g class="magnet">
-                <rect x="170" y="20" width="60" height="40" fill="{top_color}"/>
-                <rect x="170" y="60" width="60" height="40" fill="{bottom_color}"/>
-                <text x="200" y="48" fill="white" font-size="22" font-weight="bold" text-anchor="middle">{top_text}</text>
-                <text x="200" y="88" fill="white" font-size="22" font-weight="bold" text-anchor="middle">{bottom_text}</text>
+                <rect x="155" y="30" width="60" height="40" fill="{top_color}"/>
+                <rect x="155" y="70" width="60" height="40" fill="{bottom_color}"/>
+                <text x="185" y="58" fill="white" font-size="22" font-weight="bold" text-anchor="middle">{top_text}</text>
+                <text x="185" y="98" fill="white" font-size="22" font-weight="bold" text-anchor="middle">{bottom_text}</text>
+                
                 {motion_arrow}
+                {force_arrow}
             </g>
 
-            <text x="200" y="170" fill="{pole_color}" font-size="20" font-weight="bold" text-anchor="middle">{pole_display}</text>
+            <!-- 유도 극성 텍스트 (자석 하단과 겹치지 않게 y=210으로 이동) -->
+            <text x="185" y="210" fill="{pole_color}" font-size="20" font-weight="bold" text-anchor="middle">{pole_display}</text>
 
-            <rect x="150" y="180" width="100" height="120" rx="10" fill="#e0e0e0" stroke="#999" stroke-width="2"/>
+            <!-- 원통 (y=230으로 내림) -->
+            <rect x="135" y="230" width="100" height="130" rx="10" fill="#e0e0e0" stroke="#999" stroke-width="2"/>
             
-            <polyline points="150,190 100,190 100,380 170,380" fill="none" stroke="#555" stroke-width="4"/>
-            <polyline points="250,290 300,290 300,380 230,380" fill="none" stroke="#555" stroke-width="4"/>
-            <text x="100" y="175" font-size="16" font-weight="bold" text-anchor="middle">A</text>
-            <text x="300" y="275" font-size="16" font-weight="bold" text-anchor="middle">B</text>
+            <!-- 감긴 코일 선 -->
+            <path d="M 135,240 Q 185,255 235,250" fill="none" stroke="#d35400" stroke-width="6"/>
+            <path d="M 135,270 Q 185,285 235,280" fill="none" stroke="#d35400" stroke-width="6"/>
+            <path d="M 135,300 Q 185,315 235,310" fill="none" stroke="#d35400" stroke-width="6"/>
+            <path d="M 135,330 Q 185,345 235,340" fill="none" stroke="#d35400" stroke-width="6"/>
 
-            <path d="M 150,190 Q 200,205 250,200" fill="none" stroke="#d35400" stroke-width="6"/>
-            <path d="M 150,220 Q 200,235 250,230" fill="none" stroke="#d35400" stroke-width="6"/>
-            <path d="M 150,250 Q 200,265 250,260" fill="none" stroke="#d35400" stroke-width="6"/>
-            <path d="M 150,280 Q 200,295 250,290" fill="none" stroke="#d35400" stroke-width="6"/>
+            <!-- 도선 위의 전류 화살표 -->
+            {coil_current_arrows}
 
-            <rect x="170" y="360" width="60" height="40" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
-            <text x="200" y="385" font-size="14" font-weight="bold" text-anchor="middle">{external_device}</text>
+            <!-- 외부 회로 연결선 -->
+            <polyline points="135,240 85,240 85,460 160,460" fill="none" stroke="#555" stroke-width="4"/>
+            <polyline points="235,340 285,340 285,460 240,460" fill="none" stroke="#555" stroke-width="4"/>
+            
+            <!-- 단자 A, B (기기 바로 양옆 배치) -->
+            <circle cx="160" cy="460" r="5" fill="#333"/>
+            <text x="145" y="450" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">A</text>
+            
+            <circle cx="240" cy="460" r="5" fill="#333"/>
+            <text x="255" y="450" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">B</text>
 
+            <!-- 외부 기기 박스 및 심볼 -->
+            {device_svg}
+
+            <!-- 결과 전류 화살표 (하단) -->
             {arrows}
         </svg>
     </div>
@@ -100,12 +159,8 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
 
 
 def show_heart_balloons():
-    """개수가 많고 오래 지속되며 코드가 노출되지 않는 하트 애니메이션"""
-    
-    # 텍스트 노출(마크다운 오작동)을 방지하기 위해 띄어쓰기(들여쓰기)를 완전히 없앤 한 줄 SVG
     heart_svg_template = '<svg viewBox="0 0 32 32" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c0.84-9.945,14-8.902,14,0.454C30,20.335,16,28.261,16,28.261z" fill="{color}"/></svg>'
     
-    # 애니메이션 지속시간을 늘리고 스타일을 지정
     heart_html = """<style>
     @keyframes floatUpFlat {
         0% { bottom: -30%; opacity: 1; transform: translateX(0); }
@@ -120,17 +175,13 @@ def show_heart_balloons():
     
     colors = ["#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#9b59b6", "#ff9ff3", "#e67e22"]
     
-    # 총 40개의 하트를 랜덤한 위치, 크기, 시간차로 생성
     for _ in range(40):
         left = f"{random.randint(0, 95)}%"
-        size = f"{random.randint(60, 250)}px" # 60px에서 250px까지 다양한 크기
-        delay = f"{random.uniform(0, 6.0):.1f}s" # 0초부터 6초에 걸쳐 순차적으로 출발
-        duration = f"{random.uniform(8.0, 14.0):.1f}s" # 8초~14초 동안 천천히 떠오름 (오래 유지)
+        size = f"{random.randint(60, 250)}px"
+        delay = f"{random.uniform(0, 6.0):.1f}s"
+        duration = f"{random.uniform(8.0, 14.0):.1f}s"
         color = random.choice(colors)
-        
         svg_markup = heart_svg_template.format(color=color)
-        
-        # HTML 태그 작성 시 줄바꿈 없이 한 줄로 이어서 작성하여 마크다운 오류 원천 차단
         heart_html += f'<div class="flat-heart" style="left: {left}; width: {size}; animation: floatUpFlat {duration} ease-in-out forwards; animation-delay: {delay};">{svg_markup}</div>'
         
     st.markdown(heart_html, unsafe_allow_html=True)
@@ -155,7 +206,6 @@ def main():
             ["검류계", "전기 저항", "전구"]
         )
 
-        # 상태 초기화 로직
         if st.session_state.get('prev_action') != magnet_action:
             st.session_state.prev_action = magnet_action
             st.session_state.q1_solved = False
@@ -166,7 +216,6 @@ def main():
                 if key in st.session_state:
                     del st.session_state[key]
 
-        # 정답 판별 로직
         if "N극" in magnet_action:
             approaching = "가까워짐" in magnet_action
             ans_q1 = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
@@ -201,10 +250,10 @@ def main():
 
         if st.session_state.q1_solved:
             q2_options = ["선택하세요", "A(왼쪽)에서 B(오른쪽)로", "B(오른쪽)에서 A(왼쪽)로"]
-            q2_user = st.radio(f"💡 **퀴즈 2.** 오른손 법칙을 적용할 때, {external_device}에 흐르는 전류 방향은?", q2_options, key="q2_radio")
+            q2_user = st.radio(f"💡 **퀴즈 2.** 오른손 법칙을 적용할 때, 코일의 도선과 {external_device}에 흐르는 전류 방향은?", q2_options, key="q2_radio")
             
             if q2_user == ans_q2:
-                st.success(f"⭕ 정답! 오른손 엄지를 {coil_top_pole}극 쪽으로 향하게 감아쥐면 전류는 **{ans_q2}** 흐릅니다.")
+                st.success(f"⭕ 정답! 오른손 엄지를 {coil_top_pole}극 쪽으로 향하게 감아쥐면 코일 및 회로에 전류는 **{ans_q2}** 흐릅니다.")
                 st.session_state.q2_solved = True
             elif q2_user != "선택하세요":
                 st.error("❌ 다시 생각해 보세요. 엄지손가락을 N극 방향으로 향하게 하고 네 손가락을 감아쥐어 보세요.")
@@ -237,7 +286,7 @@ def main():
             st.session_state.get('q1_solved', False), 
             st.session_state.get('q2_solved', False)
         )
-        st.components.v1.html(animation_html, height=500)
+        st.components.v1.html(animation_html, height=650) # 세로 공간을 더 넉넉히 확보
 
 if __name__ == "__main__":
     main()
