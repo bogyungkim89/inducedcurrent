@@ -1,5 +1,6 @@
 import streamlit as st
 import uuid
+import random
 
 st.set_page_config(page_title="유도 전류 방향 퀴즈", page_icon="🧲", layout="wide")
 
@@ -18,7 +19,6 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
     if "가까워짐" in magnet_action:
         anim_name = "approach"
         motion_arrow = """
-        <!-- 운동 방향 화살표 (아래쪽) -->
         <line x1="250" y1="35" x2="250" y2="75" stroke="#333" stroke-width="4" stroke-linecap="round"/>
         <polygon points="240,65 260,65 250,85" fill="#333"/>
         <text x="250" y="105" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">운동 방향</text>
@@ -26,7 +26,6 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
     else:
         anim_name = "recede"
         motion_arrow = """
-        <!-- 운동 방향 화살표 (위쪽) -->
         <line x1="250" y1="85" x2="250" y2="45" stroke="#333" stroke-width="4" stroke-linecap="round"/>
         <polygon points="240,55 260,55 250,35" fill="#333"/>
         <text x="250" y="25" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">운동 방향</text>
@@ -68,7 +67,6 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
     </style>
     <div class="container" id="wrap-{unique_id}">
         <svg width="400" height="450" viewBox="0 0 400 450">
-            <!-- 자석 및 화살표 그룹 -->
             <g class="magnet">
                 <rect x="170" y="20" width="60" height="40" fill="{top_color}"/>
                 <rect x="170" y="60" width="60" height="40" fill="{bottom_color}"/>
@@ -77,29 +75,23 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
                 {motion_arrow}
             </g>
 
-            <!-- 유도 극성 -->
             <text x="200" y="170" fill="{pole_color}" font-size="20" font-weight="bold" text-anchor="middle">{pole_display}</text>
 
-            <!-- 원통 -->
             <rect x="150" y="180" width="100" height="120" rx="10" fill="#e0e0e0" stroke="#999" stroke-width="2"/>
             
-            <!-- 코일 연결선 (A, B) -->
             <polyline points="150,190 100,190 100,380 170,380" fill="none" stroke="#555" stroke-width="4"/>
             <polyline points="250,290 300,290 300,380 230,380" fill="none" stroke="#555" stroke-width="4"/>
             <text x="100" y="175" font-size="16" font-weight="bold" text-anchor="middle">A</text>
             <text x="300" y="275" font-size="16" font-weight="bold" text-anchor="middle">B</text>
 
-            <!-- 감긴 코일 (반시계 방향 고정: 왼쪽 위 -> 오른쪽 아래) -->
             <path d="M 150,190 Q 200,205 250,200" fill="none" stroke="#d35400" stroke-width="6"/>
             <path d="M 150,220 Q 200,235 250,230" fill="none" stroke="#d35400" stroke-width="6"/>
             <path d="M 150,250 Q 200,265 250,260" fill="none" stroke="#d35400" stroke-width="6"/>
             <path d="M 150,280 Q 200,295 250,290" fill="none" stroke="#d35400" stroke-width="6"/>
 
-            <!-- 외부 기기 -->
             <rect x="170" y="360" width="60" height="40" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
             <text x="200" y="385" font-size="14" font-weight="bold" text-anchor="middle">{external_device}</text>
 
-            <!-- 전류 화살표 -->
             {arrows}
         </svg>
     </div>
@@ -108,45 +100,38 @@ def get_animation_html(magnet_action, coil_top_pole, ext_dir, external_device, q
 
 
 def show_heart_balloons():
-    """다양한 크기, 색상의 플랫(Flat)한 하트가 떠오르는 애니메이션"""
+    """개수가 많고 오래 지속되며 코드가 노출되지 않는 하트 애니메이션"""
     
-    # 순수 SVG 하트 패스 (광택/음영 전혀 없음)
-    heart_svg_template = '''
-    <svg viewBox="0 0 32 32" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c0.84-9.945,14-8.902,14,0.454C30,20.335,16,28.261,16,28.261z" fill="{color}"/>
-    </svg>
-    '''
+    # 텍스트 노출(마크다운 오작동)을 방지하기 위해 띄어쓰기(들여쓰기)를 완전히 없앤 한 줄 SVG
+    heart_svg_template = '<svg viewBox="0 0 32 32" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c0.84-9.945,14-8.902,14,0.454C30,20.335,16,28.261,16,28.261z" fill="{color}"/></svg>'
     
-    # CSS 애니메이션 (그림자 filter 제거)
-    heart_html = """
-    <style>
+    # 애니메이션 지속시간을 늘리고 스타일을 지정
+    heart_html = """<style>
     @keyframes floatUpFlat {
         0% { bottom: -30%; opacity: 1; transform: translateX(0); }
-        50% { transform: translateX(20px); }
-        100% { bottom: 120%; opacity: 0; transform: translateX(-20px); }
+        50% { transform: translateX(30px); }
+        100% { bottom: 120%; opacity: 0; transform: translateX(-30px); }
     }
     .flat-heart {
         position: fixed; 
         z-index: 9999; 
-        animation: floatUpFlat 5s ease-in-out forwards;
     }
-    </style>
-    """
+    </style>"""
     
-    # 하트들의 설정 (위치, 크기, 지연시간, 색상)
-    hearts_data = [
-        {"left": "5%",  "size": "100px", "delay": "0.2s", "color": "#e74c3c"}, # 빨강 (작음)
-        {"left": "20%", "size": "240px", "delay": "0.5s", "color": "#f1c40f"}, # 노랑 (초대형 - 2배)
-        {"left": "35%", "size": "150px", "delay": "0.0s", "color": "#2ecc71"}, # 초록
-        {"left": "50%", "size": "200px", "delay": "0.8s", "color": "#3498db"}, # 파랑 (대형)
-        {"left": "65%", "size": "120px", "delay": "0.4s", "color": "#9b59b6"}, # 보라
-        {"left": "75%", "size": "220px", "delay": "0.1s", "color": "#ff9ff3"}, # 분홍 (초대형)
-        {"left": "85%", "size": "180px", "delay": "0.6s", "color": "#e67e22"}, # 주황
-    ]
+    colors = ["#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#9b59b6", "#ff9ff3", "#e67e22"]
     
-    for h in hearts_data:
-        svg_markup = heart_svg_template.format(color=h["color"])
-        heart_html += f'<div class="flat-heart" style="left: {h["left"]}; width: {h["size"]}; animation-delay: {h["delay"]};">{svg_markup}</div>\n'
+    # 총 40개의 하트를 랜덤한 위치, 크기, 시간차로 생성
+    for _ in range(40):
+        left = f"{random.randint(0, 95)}%"
+        size = f"{random.randint(60, 250)}px" # 60px에서 250px까지 다양한 크기
+        delay = f"{random.uniform(0, 6.0):.1f}s" # 0초부터 6초에 걸쳐 순차적으로 출발
+        duration = f"{random.uniform(8.0, 14.0):.1f}s" # 8초~14초 동안 천천히 떠오름 (오래 유지)
+        color = random.choice(colors)
+        
+        svg_markup = heart_svg_template.format(color=color)
+        
+        # HTML 태그 작성 시 줄바꿈 없이 한 줄로 이어서 작성하여 마크다운 오류 원천 차단
+        heart_html += f'<div class="flat-heart" style="left: {left}; width: {size}; animation: floatUpFlat {duration} ease-in-out forwards; animation-delay: {delay};">{svg_markup}</div>'
         
     st.markdown(heart_html, unsafe_allow_html=True)
 
@@ -236,7 +221,7 @@ def main():
                 st.session_state.q3_solved = True
                 
                 if not st.session_state.get('hearts_shown', False):
-                    show_heart_balloons()  # 업데이트된 SVG 하트 실행!
+                    show_heart_balloons()  
                     st.session_state.hearts_shown = True
                     
             elif q3_user != "선택하세요":
