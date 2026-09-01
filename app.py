@@ -1,108 +1,181 @@
 import streamlit as st
 
-# 페이지 설정
-st.set_page_config(page_title="유도 전류 방향 찾기", page_icon="🧲")
+st.set_page_config(page_title="유도 전류 방향 찾기 (애니메이션 버전)", page_icon="🧲", layout="wide")
+
+def get_animation_html(magnet_action, winding_dir, coil_top_pole, ext_current):
+    # 자석의 움직임과 극성에 따른 CSS 애니메이션 설정
+    if "N극" in magnet_action:
+        top_color, bottom_color = "blue", "red"  # 위 S, 아래 N
+        pole_text = "N"
+    else:
+        top_color, bottom_color = "red", "blue"  # 위 N, 아래 S
+        pole_text = "S"
+
+    if "가까워짐" in magnet_action:
+        anim_name = "moveDown"
+    else:
+        anim_name = "moveUp"
+
+    # 화살표 방향 설정 (전류 방향)
+    if "A → B" in ext_current:
+        arrow_dir = "⬇️ 아래로 흐름 (A → B)"
+    else:
+        arrow_dir = "⬆️ 위로 흐름 (B → A)"
+
+    html_code = f"""
+    <style>
+        .container {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }}
+        .magnet {{
+            width: 80px;
+            height: 140px;
+            border-radius: 5px;
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            animation: {anim_name} 2s infinite alternate ease-in-out;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+        }}
+        .magnet .top {{
+            flex: 1; background-color: {top_color};
+            border-top-left-radius: 5px; border-top-right-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 24px;
+        }}
+        .magnet .bottom {{
+            flex: 1; background-color: {bottom_color};
+            border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 24px;
+        }}
+        .coil {{
+            width: 140px;
+            height: 100px;
+            border: 8px solid #FF9800;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 50px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background-color: rgba(255, 152, 0, 0.1);
+        }}
+        .induced-pole {{
+            font-size: 30px;
+            font-weight: bold;
+            color: #d32f2f;
+            margin-top: -60px;
+            text-shadow: 1px 1px 2px white;
+        }}
+        .current-arrow {{
+            position: absolute;
+            bottom: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #388e3c;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            border: 2px solid #388e3c;
+        }}
+        
+        @keyframes moveDown {{
+            0% {{ top: -20px; }}
+            100% {{ top: 120px; }}
+        }}
+        @keyframes moveUp {{
+            0% {{ top: 120px; }}
+            100% {{ top: -20px; }}
+        }}
+    </style>
+
+    <div class="container">
+        <div class="magnet">
+            <div class="top">{"S" if pole_text=="N" else "N"}</div>
+            <div class="bottom">{pole_text}</div>
+        </div>
+        
+        <div class="coil">
+            <div class="induced-pole">{coil_top_pole}극 유도됨</div>
+        </div>
+        
+        <div class="current-arrow">전류: {arrow_dir}</div>
+    </div>
+    """
+    return html_code
 
 def main():
-    st.title("🧲 유도 전류 방향 확인하기")
-    st.markdown("전자기 유도 현상에 의해 코일에 흐르는 **유도 전류의 방향**을 3단계에 걸쳐 알아봅시다.")
-    st.divider()
-
-    # --- 옵션 설정 (사이드바) ---
-    st.sidebar.header("⚙️ 추가 옵션 설정")
-    winding_dir = st.sidebar.radio(
-        "1. 코일이 감긴 방향 (위에서 봤을 때)",
-        ["시계 방향", "반시계 방향"],
-        help="위에서 아래로 감겨 내려갈 때 코일 앞면을 지나는 도선의 방향을 결정합니다."
-    )
+    st.title("🧲 유도 전류 방향 찾기 (애니메이션)")
+    st.markdown("자석의 움직임을 선택하고, 생성되는 애니메이션을 통해 전자기 유도 현상을 눈으로 확인하세요!")
     
-    external_device = st.sidebar.radio(
-        "2. 외부 회로 연결 기기",
-        ["검류계", "전기 저항", "전구"],
-        help="코일 양 끝에 연결될 기기를 선택하세요."
-    )
+    col_settings, col_visual = st.columns([1, 1.5])
 
-    # 상태 관리를 위한 세션 초기화
-    if 'step2_clicked' not in st.session_state:
-        st.session_state.step2_clicked = False
-    if 'step3_clicked' not in st.session_state:
-        st.session_state.step3_clicked = False
-    if 'current_magnet' not in st.session_state:
-        st.session_state.current_magnet = "N극이 가까워짐"
+    with col_settings:
+        st.subheader("⚙️ 실험 조건 설정")
+        
+        # 1단계: 자석 움직임
+        magnet_action = st.radio(
+            "1. 자석의 극과 움직임",
+            ["N극이 가까워짐", "S극이 가까워짐", "N극이 멀어짐", "S극이 멀어짐"]
+        )
+        
+        # 추가 옵션 (코일 방향, 기기)
+        winding_dir = st.radio(
+            "2. 코일이 감긴 방향",
+            ["시계 방향", "반시계 방향"]
+        )
+        external_device = st.radio(
+            "3. 외부 회로 기기",
+            ["검류계", "전기 저항", "전구"]
+        )
 
-    # --- 1단계: 자석 움직임 선택 ---
-    st.header("1단계: 자석의 움직임 선택")
-    magnet_action = st.radio(
-        "원통 위쪽에 있는 막대자석의 극과 움직임을 선택하세요.",
-        ["N극이 가까워짐", "S극이 가까워짐", "N극이 멀어짐", "S극이 멀어짐"]
-    )
+        st.divider()
+        
+        # 논리 연산
+        if "N극" in magnet_action:
+            approaching = "가까워짐" in magnet_action
+            coil_top_pole = "N" if approaching else "S"
+            force_type = "밀어내는 힘(척력)" if approaching else "끌어당기는 힘(인력)"
+        else:
+            approaching = "가까워짐" in magnet_action
+            coil_top_pole = "S" if approaching else "N"
+            force_type = "밀어내는 힘(척력)" if approaching else "끌어당기는 힘(인력)"
 
-    # 자석 움직임이 바뀌면 하위 단계 초기화
-    if magnet_action != st.session_state.current_magnet:
-        st.session_state.current_magnet = magnet_action
-        st.session_state.step2_clicked = False
-        st.session_state.step3_clicked = False
-
-    # 물리적 로직 처리
-    if "N극" in magnet_action:
-        approaching = "가까워짐" in magnet_action
-        coil_top_pole = "N극" if approaching else "S극"
-        force_type = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
-    else: # S극
-        approaching = "가까워짐" in magnet_action
-        coil_top_pole = "S극" if approaching else "N극"
-        force_type = "밀어내는 힘 (척력)" if approaching else "끌어당기는 힘 (인력)"
-
-    # --- 2단계: 힘과 전자석의 극 확인 ---
-    st.header("2단계: 자석과 코일 사이의 힘 (렌츠의 법칙)")
-    if st.button("코일에 작용하는 힘 확인하기"):
-        st.session_state.step2_clicked = True
-        st.session_state.step3_clicked = False # 2단계를 다시 누르면 3단계는 초기화
-
-    if st.session_state.step2_clicked:
-        st.info(f"""
-        **렌츠의 법칙**에 의해 코일은 자석의 움직임을 **방해하는 방향**으로 자기장을 만듭니다.
-        * 현재 자석의 움직임: {magnet_action}
-        * 발생하는 힘: **{force_type}**
-        * 코일 위쪽의 극: 자석을 밀어내거나 당기기 위해 코일 위쪽은 **{coil_top_pole}**이 됩니다.
-        """)
-
-        # --- 3단계: 유도 전류의 방향 확인 ---
-        st.header("3단계: 유도 전류의 방향 (오른손 법칙)")
-        if st.button("오른손 법칙으로 전류 방향 확인하기"):
-            st.session_state.step3_clicked = True
-
-        if st.session_state.step3_clicked:
-            # 전류 방향 계산 로직
-            # 엄지 손가락 방향 (위=N극, 아래=S극)
-            thumb_dir = "위쪽" if coil_top_pole == "N극" else "아래쪽"
-            
-            # 코일 앞면에서의 전류 방향 (손가락 감아쥐는 방향)
-            if coil_top_pole == "N극":
-                front_current = "오른쪽에서 왼쪽"
+        if winding_dir == "시계 방향":
+            if coil_top_pole == "N":
+                ext_current = "위쪽에서 아래쪽 (A → B)"
             else:
-                front_current = "왼쪽에서 오른쪽"
+                ext_current = "아래쪽에서 위쪽 (B → A)"
+        else: 
+            if coil_top_pole == "N":
+                ext_current = "아래쪽에서 위쪽 (B → A)"
+            else:
+                ext_current = "위쪽에서 아래쪽 (A → B)"
 
-            # 외부 회로(위쪽 A, 아래쪽 B라고 가정)의 전류 방향
-            # 감긴 방향에 따라 외부 회로 전류 방향이 달라짐
-            if winding_dir == "시계 방향":
-                if coil_top_pole == "N극":
-                    ext_current = "위쪽에서 아래쪽 (A → B)"
-                else:
-                    ext_current = "아래쪽에서 위쪽 (B → A)"
-            else: # 반시계 방향
-                if coil_top_pole == "N극":
-                    ext_current = "아래쪽에서 위쪽 (B → A)"
-                else:
-                    ext_current = "위쪽에서 아래쪽 (A → B)"
+        # 해설 부분
+        st.subheader("💡 실험 결과 분석")
+        st.info(f"**[힘의 작용]** 렌츠의 법칙에 따라 코일은 자석을 방해합니다. 따라서 **{force_type}**이 작용하여 코일 위쪽은 **{coil_top_pole}극**이 됩니다.")
+        st.success(f"**[전류 방향]** 코일이 {winding_dir}으로 감겨있으므로, 오른손 법칙에 의해 {external_device}에는 **{ext_current}** 방향으로 유도 전류가 흐릅니다.")
 
-            st.success(f"""
-            오른손의 엄지손가락을 N극이 생기는 **{thumb_dir}**으로 향하게 하고, 나머지 네 손가락으로 원통을 감아쥡니다.
-            
-            1. **코일 앞면 도선의 전류 방향:** 네 손가락이 가리키는 방향인 **{front_current}**으로 전류가 흐릅니다.
-            2. **코일 감긴 방향 고려:** 현재 코일은 위에서 볼 때 **{winding_dir}**으로 감겨 있습니다.
-            3. **최종 결과:** 코일 양 끝과 연결된 **{external_device}**를 통해서는 전류가 **{ext_current}** 방향으로 흐릅니다!
-            """)
+    with col_visual:
+        st.subheader("👀 애니메이션 시각화")
+        st.markdown("자석이 움직이면서 코일에 유도되는 극성과 전류의 방향을 확인하세요.")
+        
+        # 생성된 HTML/CSS 애니메이션을 화면에 렌더링
+        animation_html = get_animation_html(magnet_action, winding_dir, coil_top_pole, ext_current)
+        st.components.v1.html(animation_html, height=450)
 
 if __name__ == "__main__":
     main()
