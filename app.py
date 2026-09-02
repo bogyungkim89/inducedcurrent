@@ -194,7 +194,7 @@ def page_summary():
 
 
 # ==========================================
-# 2번째 페이지: 유도 전류 3단계 확인
+# 2번째 페이지: 유도 전류 3단계 확인 
 # ==========================================
 def page_simulation():
     st.title("🧲 유도 전류 방향 3단계로 확인하기")
@@ -272,22 +272,28 @@ def page_simulation():
         q1_user = st.radio("💡 **퀴즈 1.** 자석과 코일 사이에는 어떤 방향의 힘이 작용할까요?", q1_options, key="q1_radio")
         
         if q1_user == ans_q1:
+            # 정답을 맞힌 즉시 상태를 업데이트하고 페이지를 다시 그려 애니메이션 즉각 반영
+            if not st.session_state.get('q1_solved', False):
+                st.session_state.q1_solved = True
+                st.rerun()
             st.success(f"⭕ 정답! 렌츠의 법칙에 의해 자석의 운동을 방해하므로 코일 위쪽은 **{coil_top_pole}극**이 됩니다.")
-            st.session_state.q1_solved = True
         elif q1_user != "선택하세요":
             st.error("❌ 다시 생각해 보세요. 자석의 움직임을 '방해'하려면 어떻게 밀거나 당겨야 할까요?")
 
-        if st.session_state.q1_solved:
+        if st.session_state.get('q1_solved', False):
             q2_options = ["선택하세요", "A(왼쪽)에서 B(오른쪽)로", "B(오른쪽)에서 A(왼쪽)로"]
             q2_user = st.radio(f"💡 **퀴즈 2.** 오른손 법칙을 적용할 때, 코일의 도선과 {external_device}에 흐르는 전류 방향은?", q2_options, key="q2_radio")
             
             if q2_user == ans_q2:
+                # 정답을 맞힌 즉시 상태를 업데이트하고 페이지를 다시 그려 전류 화살표 즉각 반영
+                if not st.session_state.get('q2_solved', False):
+                    st.session_state.q2_solved = True
+                    st.rerun()
                 st.success(f"⭕ 정답! 오른손 엄지를 {coil_top_pole}극 쪽으로 향하게 감아쥐면 코일 및 회로에 전류는 **{ans_q2}** 흐릅니다.")
-                st.session_state.q2_solved = True
             elif q2_user != "선택하세요":
                 st.error("❌ 다시 생각해 보세요. 엄지손가락을 N극 방향으로 향하게 하고 네 손가락을 감아쥐어 보세요.")
 
-        if st.session_state.q2_solved:
+        if st.session_state.get('q2_solved', False):
             q3_options = ["N극이 가까워짐", "S극이 가까워짐", "N극이 멀어짐", "S극이 멀어짐"]
             q3_options.remove(magnet_action)
             q3_options.insert(0, "선택하세요")
@@ -295,8 +301,10 @@ def page_simulation():
             q3_user = st.radio("💡 **퀴즈 3.** 지금 선택한 상황과 **유도 전류의 방향이 동일한** 경우는 다음 중 무엇일까요?", q3_options, key="q3_radio")
             
             if q3_user == ans_q3:
+                if not st.session_state.get('q3_solved', False):
+                    st.session_state.q3_solved = True
+                    st.rerun()
                 st.success(f"🎉 완벽합니다! '{ans_q3}'일 때도 코일 위쪽이 똑같이 **{coil_top_pole}극**이 되기 때문에 유도 전류의 방향이 일치합니다.")
-                st.session_state.q3_solved = True
                 
                 if not st.session_state.get('hearts_shown', False):
                     show_heart_balloons()  
