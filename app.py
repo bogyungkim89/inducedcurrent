@@ -194,14 +194,14 @@ def page_summary():
 
 
 # ==========================================
-# 2번째 페이지: 유도 전류 3단계 확인 (기존 완성본)
+# 2번째 페이지: 유도 전류 3단계 확인
 # ==========================================
 def page_simulation():
     st.title("🧲 유도 전류 방향 3단계로 확인하기")
     st.markdown("자석의 움직임을 설정하고, 3가지 퀴즈를 순서대로 풀며 전자기 유도의 원리를 완성해 보세요!")
     
-    # 1. 상단 영역: 실험 세팅 (좌/우 분할)
-    st.subheader("⚙️ 1. 실험 세팅")
+    # 상단 영역: 실험 세팅 (좌/우 분할)
+    st.subheader("⚙️ 실험 세팅")
     col_set1, col_set2 = st.columns(2)
     
     with col_set1:
@@ -250,7 +250,7 @@ def page_simulation():
 
     st.divider()
 
-    # 2. 하단 영역: 실시간 애니메이션(좌) / 퀴즈 풀기(우)
+    # 하단 영역: 실시간 애니메이션(좌) / 퀴즈 풀기(우)
     col_visual, col_quiz = st.columns([1.2, 1])
 
     with col_visual:
@@ -266,7 +266,7 @@ def page_simulation():
         st.components.v1.html(animation_html, height=650) 
 
     with col_quiz:
-        st.subheader("📝 2. 퀴즈 풀기")
+        st.subheader("📝 확인하기")
         
         q1_options = ["선택하세요", "밀어내는 힘 (척력)", "끌어당기는 힘 (인력)"]
         q1_user = st.radio("💡 **퀴즈 1.** 자석과 코일 사이에는 어떤 방향의 힘이 작용할까요?", q1_options, key="q1_radio")
@@ -319,13 +319,13 @@ def page_quiz():
 # 메인 함수 (사이드바 메뉴 라우팅)
 # ==========================================
 def main():
-    st.sidebar.title("📌 메뉴")
     st.sidebar.markdown("원하는 학습 페이지를 선택하세요.")
     
-    # 사이드바 라디오 버튼으로 페이지 선택
+    # 사이드바 라디오 버튼으로 페이지 선택 (라벨 텍스트 숨김 처리)
     menu = st.sidebar.radio(
-        "페이지 이동", 
-        ["1. 전자기 유도 요약정리", "2. 유도 전류 방향 3단계로 확인하기", "3. 유도 전류의 특성 확인 퀴즈"]
+        "", 
+        ["1. 전자기 유도 요약정리", "2. 유도 전류 방향 3단계로 확인하기", "3. 유도 전류의 특성 확인 퀴즈"],
+        label_visibility="collapsed"
     )
     
     # 선택된 메뉴에 따라 해당 함수(페이지) 실행
